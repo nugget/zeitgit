@@ -4,7 +4,7 @@
 -- database schema (PostgreSQL)
 --
 
-CREATE ROLE commiter LOGIN ENCRYPTED PASSWORD 'password';
+CREATE ROLE committer LOGIN ENCRYPTED PASSWORD 'password';
 
 CREATE TABLE commits (
   hash varchar NOT NULL,
