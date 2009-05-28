@@ -18,11 +18,13 @@ EMAIL=$(git config zeitgit.email)
 HOSTNAME=$(hostname)
 
 while [ "$REPOPATH" = "" ] ; do
-	cd ..
 	if [ -d .git ] ; then
 		REPOPATH=$PWD
 	fi
-	echo "$PWD -> $REPOPATH"
+	cd ..
+	if [ "$PWD" = "/" ] ; do
+		REPOPATH=/
+	fi
 done
 
 if [ "$EMAIL" = "" ] ; then
