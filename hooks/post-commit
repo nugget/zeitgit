@@ -24,4 +24,5 @@ fi
 
 FORMAT="HOSTNAME $HOSTNAME%nPATH $PWD%nORIGIN $ORIGIN%nBRANCH $BRANCH%nHASH %H%nTREEHASH %T%nPARENTHASH %P%nAUTHORNAME %aN%nAUTHOREMAIL %aE%nAUTHORDATE %at%nCOMMITERNAME %cN%nCOMMITEREMAIL %cE%nCOMMITERDATE %ct%nSUBJECT %s%nBODY %b"
 
+echo "Sending commit details to zeitgit logger"
 git log -C -1 --stat --summary --no-color "--pretty=tformat:$FORMAT" | mail -sgitcommit $EMAIL
