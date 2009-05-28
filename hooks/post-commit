@@ -22,6 +22,7 @@ while [ "$REPOPATH" = "" ] ; do
 	if [ -d .git ] ; then
 		REPOPATH=$PWD
 	fi
+	echo "$PWD -> $REPOPATH"
 done
 
 if [ "$EMAIL" = "" ] ; then
