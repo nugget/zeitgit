@@ -7,7 +7,7 @@ if [ "$ENABLED" = "" ] ; then
 	exit 127
 fi
 
-if [ "$ENABLED" = "0" ] ; then
+if [ "$ENABLED" != "true" ] ; then
 	echo "Zeitgit not enabled"
 	exit
 fi
@@ -15,12 +15,13 @@ fi
 ORIGIN=$(git config remote.origin.url) || ORIGIN=local
 BRANCH=$(git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/') || BRANCH=unknown
 EMAIL=$(git config zeitgit.email)
+HOSTNAME=$(hostname)
 
 if [ "$EMAIL" = "" ] ; then
 	echo "Zeitgit not configured!"
 	exit 127
 fi
 
-FORMAT="ORIGIN $ORIGIN%nBRANCH $BRANCH%nHASH %H%nTREEHASH %T%nPARENTHASH %P%nAUTHORNAME %aN%nAUTHOREMAIL %aE%nAUTHORDATE %at%nCOMMITERNAME %cN%nCOMMITEREMAIL %cE%nCOMMITERDATE %ct%nSUBJECT %s%nBODY %b%n"
+FORMAT="HOSTNAME $HOSTNAME%nPATH $PWD%nORIGIN $ORIGIN%nBRANCH $BRANCH%nHASH %H%nTREEHASH %T%nPARENTHASH %P%nAUTHORNAME %aN%nAUTHOREMAIL %aE%nAUTHORDATE %at%nCOMMITERNAME %cN%nCOMMITEREMAIL %cE%nCOMMITERDATE %ct%nSUBJECT %s%nBODY %b"
 
 git log -C -1 --stat --summary --no-color "--pretty=tformat:$FORMAT" | mail -sgitcommit $EMAIL
