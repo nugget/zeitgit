@@ -22,7 +22,7 @@ while [ "$REPOPATH" = "" ] ; do
 		REPOPATH=$PWD
 	fi
 	cd ..
-	if [ "$PWD" = "/" ] ; do
+	if [ "$PWD" = "/" ] ; then
 		REPOPATH=/
 	fi
 done
