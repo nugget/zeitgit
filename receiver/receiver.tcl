@@ -48,7 +48,8 @@ while {[gets stdin line] >= 0} {
 		puts [pg_result $res -error]
 		pg_result $res -clear
 	
-		set res [pg_exec $db "INSERT INTO commit_branch (hash,branch) VALUES ([pg_quote $cdata(HASH)], [pg_quote $cdata(BRANCH)]);"]
+		set res [pg_exec $db "INSERT INTO commit_branch (hash,branch,hostname,origin,path) VALUES ([pg_quote $cdata(HASH)], [pg_quote $cdata(BRANCH)],
+                                             [pg_quote $cdata(HOSTNAME)], [pg_quote $cdata(ORIGIN)], [pg_quote $cdata(PATH)]);"]
 		puts [pg_result $res -error]
 		pg_result $res -clear
 
