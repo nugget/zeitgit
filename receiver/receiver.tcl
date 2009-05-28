@@ -2,14 +2,8 @@
 
 package require Pgtcl
 
-array set DB {
-	dbname          zeitgit
-	host            localhost
-	port            5432
-	user            committer
-	password        password
-	connect_timeout 5
-}
+source config.tcl
+
 proc epoch_ts {epoch} {
 	return "(SELECT TIMESTAMP WITH TIME ZONE 'epoch' + $epoch * INTERVAL '1 second')"
 }
@@ -23,9 +17,8 @@ while {[gets stdin line] >= 0} {
 		set cdata($key) "$value"
 	}
 
-	puts $line
-	if {$line == ""} {
-		puts "Inserting $cdata(hash)"
+	if {$line == "" && [info exists cdata(HASH)]} {
+		puts "Inserting $cdata(HASH)"
 
 		set res [pg_exec $db "INSERT INTO commits (hash, tree_hash, parent_hash,
                                           author_name,author_email,author_date,
@@ -48,7 +41,7 @@ while {[gets stdin line] >= 0} {
 		puts [pg_result $res -error]
 		pg_result $res -clear
 	
-		set res [pg_exec $db "INSERT INTO commit_branch (hash,branch,hostname,origin,path) VALUES ([pg_quote $cdata(HASH)], [pg_quote $cdata(BRANCH)],
+		set res [pg_exec $db "INSERT INTO commit_location (hash,branch,hostname,origin,path) VALUES ([pg_quote $cdata(HASH)], [pg_quote $cdata(BRANCH)],
                                              [pg_quote $cdata(HOSTNAME)], [pg_quote $cdata(ORIGIN)], [pg_quote $cdata(PATH)]);"]
 		puts [pg_result $res -error]
 		pg_result $res -clear
