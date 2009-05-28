@@ -21,12 +21,15 @@ CREATE TABLE commits (
   added timestamp NOT NULL DEFAULT (current_timestamp at time zone 'utc'),
   PRIMARY KEY(hash)
 );
-GRANT SELECT,INSERT ON commits TO commiter;
+GRANT SELECT,INSERT ON commits TO committer;
 
-CREATE TABLE commit_branch (
+CREATE TABLE commit_location (
   id serial NOT NULL,
   hash varchar NOT NULL REFERENCES commits(hash),
-  branch varchar NOT NULL
+  branch varchar NOT NULL,
+  hostname varchar,
+  origin varchar,
+  path varchar
 );
-GRANT SELECT,INSEET ON commit_branch TO commiter;
-GRANT ALL ON commit_branch_id_seq TO commiter;
+GRANT SELECT,INSERT ON commit_location TO committer;
+GRANT ALL ON commit_location_id_seq TO committer;
