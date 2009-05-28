@@ -17,15 +17,17 @@ BRANCH=$(git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\
 EMAIL=$(git config zeitgit.email)
 HOSTNAME=$(hostname)
 
+ORIGPATH=$PWD
 while [ "$REPOPATH" = "" ] ; do
 	if [ -d .git ] ; then
 		REPOPATH=$PWD
 	fi
-	cd ..
 	if [ "$PWD" = "/" ] ; then
 		REPOPATH=/
 	fi
+	cd ..
 done
+cd $ORIGPATH
 
 if [ "$EMAIL" = "" ] ; then
 	echo "Zeitgit not configured!"
