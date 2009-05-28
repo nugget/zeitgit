@@ -17,10 +17,10 @@ BRANCH=$(git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\
 EMAIL=$(git config zeitgit.email)
 HOSTNAME=$(hostname)
 
-while [ "$PATH" = "" ] ; do
+while [ "$REPOPATH" = "" ] ; do
 	cd ..
 	if [ -d .git ] ; then
-		PATH=$PWD
+		REPOPATH=$PWD
 	fi
 done
 
@@ -29,7 +29,7 @@ if [ "$EMAIL" = "" ] ; then
 	exit 127
 fi
 
-FORMAT="HOSTNAME $HOSTNAME%nPATH $PATH%nORIGIN $ORIGIN%nBRANCH $BRANCH%nHASH %H%nTREEHASH %T%nPARENTHASH %P%nAUTHORNAME %aN%nAUTHOREMAIL %aE%nAUTHORDATE %at%nCOMMITERNAME %cN%nCOMMITEREMAIL %cE%nCOMMITERDATE %ct%nSUBJECT %s%nBODY %b"
+FORMAT="HOSTNAME $HOSTNAME%nPATH $REPOPATH%nORIGIN $ORIGIN%nBRANCH $BRANCH%nHASH %H%nTREEHASH %T%nPARENTHASH %P%nAUTHORNAME %aN%nAUTHOREMAIL %aE%nAUTHORDATE %at%nCOMMITERNAME %cN%nCOMMITEREMAIL %cE%nCOMMITERDATE %ct%nSUBJECT %s%nBODY %b"
 
 echo "Sending commit details to zeitgit logger"
 git log -C -1 --stat --summary --no-color "--pretty=tformat:$FORMAT" | mail -sgitcommit $EMAIL
