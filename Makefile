@@ -7,7 +7,7 @@ EXEC_PREFIX ?= $(PREFIX)
 SHAREDIR    ?= $(PREFIX)/share/zeitgit
 BINDIR      ?= $(EXEC_PREFIX)/bin
 
-INSTALL     ?= install -C
+INSTALL     ?= install
 
 all: hook-scripts zeitgit
 
@@ -21,16 +21,16 @@ install: all install-hooks install-tools
 install-hooks:
 	@if ! test -d $(SHAREDIR) ; then \
 		echo "Creating directory $(SHAREDIR)" ; \
-		$(INSTALL) -o root -g wheel -m 0755 -d $(SHAREDIR) ; \
+		$(INSTALL) -m 0755 -d $(SHAREDIR) ; \
 	fi
-	$(INSTALL) -o root -g wheel -m 0755 hooks/post-commit $(SHAREDIR)/
+	$(INSTALL) -C -m 0755 hooks/post-commit $(SHAREDIR)/
 
 install-tools: tools
 	@if ! test -d $(BINDIR) ; then \
 		echo "Creating directory $(BINDIR)" ; \
-		$(INSTALL) -o root -g wheel -m 0755 -d $(BINDIR) ; \
+		$(INSTALL) -m 0755 -d $(BINDIR) ; \
 	fi
-	$(INSTALL) -o root -g wheel -m 0755 tools/zeitgit $(BINDIR)/
+	$(INSTALL) -C -m 0755 tools/zeitgit $(BINDIR)/
 
 clean:
 	rm tools/zeitgit
