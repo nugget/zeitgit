@@ -1,6 +1,6 @@
 #!/bin/sh
 
-HOOKPATH=/usr/local/share/zeitgit
+HOOKPATH=@SHAREDIR@
 
 if [ $# -eq 0 ]; then
 	echo "Usage: `basename $0` enable  [email@example.com]"
