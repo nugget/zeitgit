@@ -7,7 +7,7 @@ EXEC_PREFIX ?= $(PREFIX)
 SHAREDIR    ?= $(PREFIX)/share/zeitgit
 BINDIR      ?= $(EXEC_PREFIX)/bin
 
-INSTALL ?= install -C
+INSTALL     ?= install -C
 
 all:
 
