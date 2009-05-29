@@ -1,0 +1,49 @@
+#!/bin/sh
+
+HOOKPATH=@SHAREDIR@
+
+if [ $# -eq 0 ]; then
+	echo "Usage: `basename $0` enable  [email@example.com]"
+	echo "       `basename $0` disable"
+	echo "       `basename $0` hooks"
+	exit 1
+fi
+
+git config core.repositoryformatversion >/dev/null
+if [ $? -ne 0 ]; then
+	echo "Not a git repository" >&2
+	exit 1
+fi
+
+if [ "$1" = "enable" ]; then
+	git config zeitgit.enabled true
+
+	if [ "$2" != "" ]; then
+		git config zeitgit.receiveremail $2
+	fi
+fi
+
+if [ "$1" = "disable" ]; then
+	git config zeitgit.enabled false
+fi
+
+echo "Zeitgit configuration:"
+git config -l | grep -i zeitgit | sed 's/^/  /'
+
+ORIGPATH=$PWD
+# Back through (..) our full cwd until we find the repo base directory with .git/ in it.
+while [ "$REPOPATH" = "" ] ; do
+        if [ -d .git ] ; then
+                REPOPATH=$PWD
+        fi
+        if [ "$PWD" = "/" ] ; then
+                REPOPATH=/
+        fi
+        cd ..
+done
+cd $HOOKPATH
+echo "Hook Files:"
+for HOOK in * ; do
+	echo "  $HOOK"
+	ln -sf $HOOKPATH/$HOOK $REPOPATH/.git/hooks/
+done
