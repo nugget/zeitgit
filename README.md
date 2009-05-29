@@ -26,6 +26,11 @@ Any code which needs to run at the remote repository level should be as
 boring and portable as possible.  Where practical, hooks and scripts are 
 written in basic bourne shell with minimal toolkit assumptions.
 
+Zeitgit uses email as the transport mechanism so it doesn't require an 
+active net connection while commits are being logged.  Commit mails to
+the receiver service will simply queue and be sent when a net connection
+is available later.
+
 ## Credits ##
 
 Zeitgit was developed internally at FlightAware to facilite a company-wide
