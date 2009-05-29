@@ -23,6 +23,17 @@ CREATE TABLE commits (
 );
 GRANT SELECT,INSERT ON commits TO committer;
 
+CREATE TABLE commit_file (
+  id serial NOT NULL,
+  hash varchar NOT NULL REFERENCES commits(hash),
+  filename varchar NOT NULL,
+  insertions integer,
+  deletions integer,
+  PRIMARY KEY(id)
+);
+GRANT SELECT,INSERT ON commit_file TO committer;
+GRANT ALL ON commit_file_id_seq TO committer;
+
 CREATE TABLE commit_location (
   id serial NOT NULL,
   hash varchar NOT NULL REFERENCES commits(hash),
