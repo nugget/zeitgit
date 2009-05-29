@@ -16,7 +16,7 @@ fi
 # Set up some variables based on working environment
 ORIGIN=$(git config remote.origin.url) || ORIGIN=orphan
 BRANCH=$(git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/') || BRANCH=unknown
-EMAIL=$(git config zeitgit.collectoremail)
+EMAIL=$(git config zeitgit.receiveremail)
 HOSTNAME=$(hostname)
 
 if [ "$EMAIL" = "" ] ; then
