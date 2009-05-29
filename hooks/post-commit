@@ -1,7 +1,7 @@
 #!/bin/sh
 
 VERSION=1.00
-=$(git config zeitgit.enabled)
+ENABLED=$(git config zeitgit.enabled)
 
 if [ "$ENABLED" = "" ] ; then
 	echo "Zeitgit not configured!"
