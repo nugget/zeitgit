@@ -1,0 +1,68 @@
+# Quick-start Guide #
+
+## Installing the receiver ##
+
+The core of Zeitgit is the collector script which runs on a central host
+and accepts commit information from developers via email.  This collector
+script requires PostgreSQL and TCL on the host.  It can easily be launched
+automatically via procmail, although integration into any mail delivery agent
+should be a relatively straightforward process.
+
+1. Create the database to store the Zeitgit log data and initialize the
+   schema.  You'll also want to set a custom password on the committer role:
+
+        createdb zeitgit 
+	psql < db/schema.sql
+	psql zeitgit -c "ALTER ROLE committer WITH ENCRYPTED PASSWORD 'pwd';"
+
+2. Configure the receiver script to use your local database configuration:
+
+        cd receiver
+	cp config.tcl.sample config.tcl
+
+   Then edit config.tcl to taste.  Minimally you'll need to change the
+   password to match the SQL command you ran in step 1.
+
+3. Hook up the collector script to an email account or alias you've created.
+   How this works exactly will be site-specific depending on your host
+   configuration, but here's how it works for us.  There's a unix account on
+   the server which receives the commit emails from the repo hooks.  That
+   account has a .procmailrc that contains:
+
+        LOGFILE=$HOME/log/procmail.log
+	VERBOSE=yes
+	LOGABSTRACT=all
+
+	:0 H
+	* ^Subject:.*gitcommit
+	| $HOME/src/zeitgit/receiver/receiver.tcl
+
+   This catches any incoming commit email from a Zeitgit client and pipes it
+   into the receiver script, which in turn stores the commit info in the
+   database.
+
+
+## Installing Zeitgit on a local repository/clone ##
+
+Zeitgit includes a shell script which can be used to automatically maintain
+the git hooks and configuration.  Running "make install" from the base
+zeitgit directory will install shared copies of the hook scripts and the
+tool script into /usr/local/share/zeitgit/ and /usr/local/bin/ on the machine.
+
+You'll probably want to install this on any machine which developers use such
+as shared development servers and personal workstations.  You can override
+the /usr/local/ pathing with command-line variables.  For example:
+
+    make PREFIX=/opt install
+
+This will provide a 'zeitgit' tool which can then be used in a repository to
+install the related hooks and configure the Zeitgit target email address.
+
+Change into a repo or clone directory and run:
+
+    zeitgit enable email@example.com
+
+To temporarily disable zeitgit you can run:
+
+    zeitgit disable
+
