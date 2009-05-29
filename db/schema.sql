@@ -29,7 +29,9 @@ CREATE TABLE commit_location (
   branch varchar NOT NULL,
   hostname varchar,
   origin varchar,
-  path varchar
+  path varchar,
+  version numeric(4,2),
+  PRIMARY KEY(id)
 );
 GRANT SELECT,INSERT ON commit_location TO committer;
 GRANT ALL ON commit_location_id_seq TO committer;
