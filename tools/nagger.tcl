@@ -11,7 +11,7 @@ package require mime
 package require smtp
 package require xml
 
-set fh [open "|find / -type d -name .git"] 
+ set fh [open "|find / -type d -name .git"] 
 
 while {[gets $fh line] >= 0} {
 	set repo [regsub {\.git$} $line ""]
@@ -21,6 +21,8 @@ while {[gets $fh line] >= 0} {
 }
 
 foreach user [array names repolist] {
+	set hits 0
+
 	set email "$user@flightaware.com"
 	set body "
 Hi!
@@ -30,11 +32,10 @@ on [info host] which are not Zeitgit-enabled.
 
 You should consider running the following commands to enable Zeitgit!"
 
-	set hits 0
-
 	foreach repo $repolist($user) {
 		cd $repo
-		if {![system git config zeitgit.enabled >/dev/null]} {
+		set confcheck [system git config zeitgit.enabled >/dev/null]
+		if {$confcheck} {
 			incr hits
 			append body "
 
@@ -45,7 +46,16 @@ You should consider running the following commands to enable Zeitgit!"
 		}
 	}
 
+	if {$user != "nugget"} {
+		set hits 0
+	}
+
 	if {$hits > 0} {
+		append body "
+If you don't want to use Zeitgit for some of those repositories,
+you can instead do 'zeitgit disable' and you will no longer be
+nagged for that directory."
+
 		puts "Sending nag email to $user"
 
 		set part_text [mime::initialize -canonical text/plain -string $body]
