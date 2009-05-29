@@ -1,6 +1,7 @@
 #!/bin/sh
 
-ENABLED=$(git config zeitgit.enabled)
+VERSION=1.00
+=$(git config zeitgit.enabled)
 
 if [ "$ENABLED" = "" ] ; then
 	echo "Zeitgit not configured!"
@@ -12,12 +13,19 @@ if [ "$ENABLED" != "true" ] ; then
 	exit
 fi
 
-ORIGIN=$(git config remote.origin.url) || ORIGIN=local
+# Set up some variables based on working environment
+ORIGIN=$(git config remote.origin.url) || ORIGIN=orphan
 BRANCH=$(git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/') || BRANCH=unknown
-EMAIL=$(git config zeitgit.email)
+EMAIL=$(git config zeitgit.collectoremail)
 HOSTNAME=$(hostname)
 
+if [ "$EMAIL" = "" ] ; then
+	echo "Zeitgit not configured!"
+	exit 127
+fi
+
 ORIGPATH=$PWD
+# Back through (..) our full cwd until we find the repo base directory with .git/ in it.
 while [ "$REPOPATH" = "" ] ; do
 	if [ -d .git ] ; then
 		REPOPATH=$PWD
@@ -29,12 +37,7 @@ while [ "$REPOPATH" = "" ] ; do
 done
 cd $ORIGPATH
 
-if [ "$EMAIL" = "" ] ; then
-	echo "Zeitgit not configured!"
-	exit 127
-fi
+FORMAT="ZEITGIT $VERSION%nHOSTNAME $HOSTNAME%nPATH $REPOPATH%nORIGIN $ORIGIN%nBRANCH $BRANCH%nHASH %H%nTREEHASH %T%nPARENTHASH %P%nAUTHORNAME %aN%nAUTHOREMAIL %aE%nAUTHORDATE %at%nCOMMITERNAME %cN%nCOMMITEREMAIL %cE%nCOMMITERDATE %ct%nSUBJECT %s%nBODY %b"
 
-FORMAT="HOSTNAME $HOSTNAME%nPATH $REPOPATH%nORIGIN $ORIGIN%nBRANCH $BRANCH%nHASH %H%nTREEHASH %T%nPARENTHASH %P%nAUTHORNAME %aN%nAUTHOREMAIL %aE%nAUTHORDATE %at%nCOMMITERNAME %cN%nCOMMITEREMAIL %cE%nCOMMITERDATE %ct%nSUBJECT %s%nBODY %b"
-
-echo "Sending commit details to zeitgit logger"
+echo "Sending commit data to zeitgit collector at $EMAIL"
 git log -C -1 --stat --summary --no-color "--pretty=tformat:$FORMAT" | mail -sgitcommit $EMAIL
