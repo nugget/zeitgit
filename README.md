@@ -37,13 +37,16 @@ should be a relatively straightforward process.
 
 1. Create the database to store the Zeitgit log data and initialize the schema.
    You'll also want to set a custom password on the committer role:
-        $ createdb zeitgit 
-	$ psql < db/schema.sql
-	$ psql zeitgit -c "ALTER ROLE committer WITH ENCRYPTED PASSWORD 'password';"
+
+        createdb zeitgit 
+	psql < db/schema.sql
+	psql zeitgit -c "ALTER ROLE committer WITH ENCRYPTED PASSWORD 'password';"
 
 2. Configure the receiver script to use your local database configuration:
-        $ cd receiver
-	$ cp config.tcl.sample config.tcl
+
+        cd receiver
+	cp config.tcl.sample config.tcl
+
    Then edit config.tcl to taste.  Minimally you'll need to change the password.
 
 3. Hook up the collector script to an email account or alias you've created.  How
@@ -51,6 +54,7 @@ should be a relatively straightforward process.
    but here's how it works for us.  There's a unix account on the server which 
    receives the commit emails from the repo hooks.  That account has a .procmailrc
    that contains:
+
         LOGFILE=$HOME/log/procmail.log
 	VERBOSE=yes
 	LOGABSTRACT=all
@@ -58,5 +62,6 @@ should be a relatively straightforward process.
 	:0 H
 	* ^Subject:.*gitcommit
 	| $HOME/src/zeitgit/receiver/receiver.tcl
+
    This catches any incoming commit email from a Zeitgit client and pipes it into
    the receiver script, which in turn stores the commit info in the database.
