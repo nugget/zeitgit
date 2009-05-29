@@ -22,9 +22,9 @@ proc do_sql {sql} {
 	set err [pg_result $res -error]
 	if {$err != ""} {
 		puts stderr "Error executing SQL:\n$sql\n-- \n$err\n"
-		retcode 0
+		set retcode 0
 	} else {
-		retcode 1
+		set retcode 1
 	}
 	pg_result $res -clear
 
