@@ -12,10 +12,32 @@ proc count_char {char buf} {
 	return [string length [regsub -all "\[^$char\]" $buf ""]]
 }
 
+proc do_sql {sql} {
+	global db
+
+	# puts "debug:\n$sql\n"
+	# return 0
+
+	set res [pg_exec $db $sql]
+	set err [pg_result $res -error]
+	if {$err != ""} {
+		puts stderr "Error executing SQL:\n$sql\n-- \n$err\n"
+		retcode 0
+	} else {
+		retcode 1
+	}
+	pg_result $res -clear
+
+	return $retcode
+}
+
 if {[catch {set db [pg_connect -connlist [array get DB]]} result] == 1} {
 	puts "Unable to connect to database: $result"
 	exit
 }
+
+set in_body 0
+
 while {[gets stdin line] >= 0} {
 	if {[regexp {^ZEITGIT } $line]} {
 		puts "New record"
@@ -23,27 +45,33 @@ while {[gets stdin line] >= 0} {
 	}
 	if {[regexp {^([A-Z]+) (.*)$} $line _ key value]} {
 		set cdata($key) "$value"
+		if {$key == "BODY"} {
+			set in_body 1
+		}
 	}
-	
 
 	#  tools/{zeitgit => zeitgit.in} |    0   (a rename)
 	if {[regexp { (.+) \| +(\d+) ([-+]+)} $line _ filename lines plusminus]} {
+		set in_body 0
+
 		set insertions [count_char + $plusminus]
 		set deletions  [count_char - $plusminus]
 
 		set sql "INSERT INTO commit_file (hash,filename,insertions,deletions) VALUES (
-		                     [pg_quote $cdata(HASH)],
+		                     [pg_quote $hash],
 				     [pg_quote $filename],
 				     $insertions,
 				     $deletions);"
+		do_sql $sql
+	}
 
-		set res [pg_exec $db $sql]
-		puts [pg_result $res -error]
-		pg_result $res -clear
+	if {$in_body} {
+		append cdata(BODY) $line
 	}
 
 	if {$line == "" && [info exists cdata(HASH)]} {
 		puts "Inserting $cdata(HASH)"
+		set hash $cdata(HASH)
 
 		set sql "INSERT INTO commits (hash, tree_hash, parent_hash,
                                 author_name,author_email,author_date,
@@ -63,19 +91,13 @@ while {[gets stdin line] >= 0} {
 	                    [pg_quote $cdata(BODY)]
 	                 WHERE [pg_quote $cdata(HASH)] NOT IN (SELECT DISTINCT hash FROM commits);"
 
-		puts $sql
-
-		set res [pg_exec $db $sql]
-		puts [pg_result $res -error]
-		pg_result $res -clear
+		do_sql $sql
 	
 		set sql "INSERT INTO commit_location (hash,branch,hostname,origin,path,version) VALUES ([pg_quote $cdata(HASH)], [pg_quote $cdata(BRANCH)],
                                      [pg_quote $cdata(HOSTNAME)], [pg_quote $cdata(ORIGIN)], [pg_quote $cdata(PATH)], [pg_quote $cdata(ZEITGIT)]);"
 
-		puts $sql
-		set res [pg_exec $db $sql]
-		puts [pg_result $res -error]
-		pg_result $res -clear
+		do_sql $sql
 
+		unset -nocomplain cdata
 	}
 }
