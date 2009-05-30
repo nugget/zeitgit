@@ -51,21 +51,6 @@ while {[gets stdin line] >= 0} {
 		}
 	}
 
-	#  tools/{zeitgit => zeitgit.in} |    0   (a rename)
-	if {[regexp { (.+) \| +(\d+) ([-+]+)} $line _ filename lines plusminus]} {
-		set in_body 0
-
-		set insertions [count_char + $plusminus]
-		set deletions  [count_char - $plusminus]
-
-		set sql "INSERT INTO commit_file (hash,filename,insertions,deletions) VALUES (
-		                     [pg_quote $cdata(HASH)],
-				     [pg_quote $filename],
-				     $insertions,
-				     $deletions);"
-		do_sql $sql
-	}
-
 	if {$in_body} {
 		append cdata(BODY) "$line\n"
 	}
@@ -99,5 +84,20 @@ while {[gets stdin line] >= 0} {
 		do_sql $sql
 
 		set stored($cdata(HASH)) 1
+	}
+
+	#  tools/{zeitgit => zeitgit.in} |    0   (a rename)
+	if {[regexp { (.+) \| +(\d+) ([-+]+)} $line _ filename lines plusminus]} {
+		set in_body 0
+
+		set insertions [count_char + $plusminus]
+		set deletions  [count_char - $plusminus]
+
+		set sql "INSERT INTO commit_file (hash,filename,insertions,deletions) VALUES (
+		                     [pg_quote $cdata(HASH)],
+				     [pg_quote $filename],
+				     $insertions,
+				     $deletions);"
+		do_sql $sql
 	}
 }
