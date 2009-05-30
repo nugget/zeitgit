@@ -15,8 +15,8 @@ proc count_char {char buf} {
 proc do_sql {sql} {
 	global db
 
-	# puts "debug:\n$sql\n"
-	# return 0
+	#puts "debug:\n$sql\n"
+	#return 0
 
 	set res [pg_exec $db $sql]
 	set err [pg_result $res -error]
@@ -47,6 +47,7 @@ while {[gets stdin line] >= 0} {
 		set cdata($key) "$value"
 		if {$key == "BODY"} {
 			set in_body 1
+			set cdata(BODY) ""
 		}
 	}
 
@@ -58,7 +59,7 @@ while {[gets stdin line] >= 0} {
 		set deletions  [count_char - $plusminus]
 
 		set sql "INSERT INTO commit_file (hash,filename,insertions,deletions) VALUES (
-		                     [pg_quote $hash],
+		                     [pg_quote $cdata(HASH)],
 				     [pg_quote $filename],
 				     $insertions,
 				     $deletions);"
@@ -66,12 +67,11 @@ while {[gets stdin line] >= 0} {
 	}
 
 	if {$in_body} {
-		append cdata(BODY) $line
+		append cdata(BODY) "$line\n"
 	}
 
-	if {$line == "" && [info exists cdata(HASH)]} {
+	if {[regexp { (.+) \| +(\d+) ([-+]+)} $line _ filename lines plusminus] && ![info exists stored($cdata(HASH))]} {
 		puts "Inserting $cdata(HASH)"
-		set hash $cdata(HASH)
 
 		set sql "INSERT INTO commits (hash, tree_hash, parent_hash,
                                 author_name,author_email,author_date,
@@ -98,6 +98,6 @@ while {[gets stdin line] >= 0} {
 
 		do_sql $sql
 
-		unset -nocomplain cdata
+		set stored($cdata(HASH)) 1
 	}
 }
