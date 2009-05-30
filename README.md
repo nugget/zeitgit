@@ -31,6 +31,14 @@ active net connection while commits are being logged.  Commit mails to
 the receiver service will simply queue and be sent when a net connection
 is available later.
 
+## Requirements ##
+
+* Assumes you use Unix.  cygwin might be ok but is totally untested.
+* tcl and PostgreSQL required on the logging server
+* Procmail or some other mechanism to automatically pipe some emails
+  into a script.
+* /bin/sh on the repository (client) side. 
+
 ## Credits ##
 
 Zeitgit was developed internally at FlightAware to facilite a company-wide
