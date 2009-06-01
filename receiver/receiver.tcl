@@ -52,14 +52,12 @@ while {[gets stdin line] >= 0} {
 			set in_body 1
 			set cdata(BODY) ""
 		}
-	} elseif {$in_body} {
-		append cdata(BODY) "$line\n"
-	}
+	} elseif {[regexp { (.+) \| +(\d+) ([-+]+)} $line _ filename lines plusminus]} {
+		set in_body 0
+		if {![info exists stored($cdata(HASH))]} {
+			puts "Inserting $cdata(HASH)"
 
-	if {[regexp { (.+) \| +(\d+) ([-+]+)} $line _ filename lines plusminus] && ![info exists stored($cdata(HASH))]} {
-		puts "Inserting $cdata(HASH)"
-
-		set sql "INSERT INTO commits (hash, tree_hash, parent_hash,
+			set sql "INSERT INTO commits (hash, tree_hash, parent_hash,
                                 author_name,author_email,author_date,
 	                        commit_name,commit_email,commit_date,
 	                        subject,body)
@@ -77,19 +75,15 @@ while {[gets stdin line] >= 0} {
 	                    [pg_quote $cdata(BODY)]
 	                 WHERE [pg_quote $cdata(HASH)] NOT IN (SELECT DISTINCT hash FROM commits);"
 
-		do_sql $sql
+			do_sql $sql
 	
-		set sql "INSERT INTO commit_location (hash,branch,hostname,origin,path,version) VALUES ([pg_quote $cdata(HASH)], [pg_quote $cdata(BRANCH)],
+			set sql "INSERT INTO commit_location (hash,branch,hostname,origin,path,version) VALUES ([pg_quote $cdata(HASH)], [pg_quote $cdata(BRANCH)],
                                      [pg_quote $cdata(HOSTNAME)], [pg_quote $cdata(ORIGIN)], [pg_quote $cdata(PATH)], [pg_quote $cdata(ZEITGIT)]);"
 
-		do_sql $sql
+			do_sql $sql
 
-		set stored($cdata(HASH)) 1
-	}
-
-	#  tools/{zeitgit => zeitgit.in} |    0   (a rename)
-	if {[regexp { (.+) \| +(\d+) ([-+]+)} $line _ filename lines plusminus]} {
-		set in_body 0
+			set stored($cdata(HASH)) 1
+		}
 
 		set insertions [count_char + $plusminus]
 		set deletions  [count_char - $plusminus]
@@ -100,6 +94,11 @@ while {[gets stdin line] >= 0} {
 				     $insertions,
 				     $deletions);"
 		do_sql $sql
+
+	} elseif {$in_body} {
+		append cdata(BODY) "$line\n"
 	}
+
+	#  tools/{zeitgit => zeitgit.in} |    0   (a rename)
 }
 close $lh
