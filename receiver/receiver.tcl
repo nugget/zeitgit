@@ -92,8 +92,7 @@ while {[gets stdin line] >= 0} {
 		                     [pg_quote $cdata(HASH)],
 				     [pg_quote $filename],
 				     $insertions,
-				     $deletions)
-			 WHERE hash NOT IN (SELECT hash FROM commit_file WHERE hash = [pg_quote $cdata(HASH)] AND filename = [pg_quote $filename]);"
+				     $deletions);"
 		do_sql $sql
 
 	} elseif {$in_body} {
