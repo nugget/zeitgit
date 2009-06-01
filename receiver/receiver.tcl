@@ -38,7 +38,10 @@ if {[catch {set db [pg_connect -connlist [array get DB]]} result] == 1} {
 
 set in_body 0
 
+set lh [open "/var/log/zeitgit.log" "w"]
 while {[gets stdin line] >= 0} {
+	puts $lh $line
+
 	if {[regexp {^ZEITGIT } $line]} {
 		puts "New record"
 		unset -nocomplain cdata
@@ -49,9 +52,7 @@ while {[gets stdin line] >= 0} {
 			set in_body 1
 			set cdata(BODY) ""
 		}
-	}
-
-	if {$in_body} {
+	} elseif {$in_body} {
 		append cdata(BODY) "$line\n"
 	}
 
@@ -101,3 +102,4 @@ while {[gets stdin line] >= 0} {
 		do_sql $sql
 	}
 }
+close $lh
