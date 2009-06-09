@@ -27,7 +27,7 @@ fi
 ORIGPATH=$PWD
 # Back through (..) our full cwd until we find the repo base directory with .git/ in it.
 while [ "$REPOPATH" = "" ] ; do
-	if [ -d .git ] ; then
+	if [ -d $PWD/.git ] ; then
 		REPOPATH=$PWD
 	fi
 	if [ "$PWD" = "/" ] ; then
