@@ -1,0 +1,25 @@
+#
+# Place the contents of this script somewhere like
+# ~/bin/cshprompt or site-wide in /usr/local/bin/cshprompt 
+#
+# Then add a line to your .cshrc or .tcshrc like:
+#
+#   alias precmd "source $HOME/bin/cshprompt"
+#
+
+unset printexitvalue
+
+setenv GIT_ZEITGIT ""
+setenv GIT_BRANCH ""
+
+git status >&/dev/null
+if ($? == 1) then
+	git config zeitgit.enabled >&/dev/null
+	if ($? == 1) then
+		setenv GIT_ZEITGIT "%BZeitgit not configured%b\n"
+	endif
+endif
+
+setenv GIT_BRANCH_CMD "sh -c 'git branch --no-color 2> /dev/null' | sed -e '/^[^*]/d' -e 's/* \(.*\)/ (\1)/'"
+
+set prompt="$GIT_ZEITGIT%Bs%b`$GIT_BRANCH_CMD` %n@%m:%~%#"

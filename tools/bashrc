@@ -1,0 +1,25 @@
+#
+# Git and Zeitgit awareness in your bash prompt
+#
+# Place this block of code in your .bashrc or in a site-wide
+# /etc/bashrc (or equivalent, depending on your operating system)
+#
+
+function git_zeitgit {
+	git branch >/dev/null 2>/dev/null || return
+	git config zeitgit.enabled >/dev/null 2>/dev/null && return
+	echo "
+Zeitgit not configured
+!"
+}
+
+function git_branch {
+	git branch >/dev/null 2>/dev/null || return
+	git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1) /'
+}
+
+# Karl style
+PS1="\$(git_zeitgit)`hostname -s` \$(git_branch)\w \$ "
+
+#Default style
+PS1="\$(git_zeitgit)[\u@\h \$(git_branch)\w]\$ "
