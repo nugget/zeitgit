@@ -2,12 +2,6 @@
 
 HOOKPATH=@SHAREDIR@
 
-if [ $# -eq 0 ]; then
-	echo "Usage: `basename $0` enable  [email@example.com]"
-	echo "       `basename $0` disable"
-	exit 1
-fi
-
 git config core.repositoryformatversion >/dev/null
 if [ $? -ne 0 ]; then
 	echo "Not a git repository" >&2
@@ -23,7 +17,8 @@ if [ "$1" = "enable" ]; then
 elif [ "$1" = "disable" ]; then
 	git config zeitgit.enabled false
 else
-	echo "  Unrecognized Command"
+	echo "Usage: `basename $0` enable  [email@example.com]"
+	echo "       `basename $0` disable"
 	exit 1
 fi
 
