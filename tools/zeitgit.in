@@ -21,10 +21,11 @@ if [ "$1" = "enable" ]; then
 	if [ "$2" != "" ]; then
 		git config zeitgit.receiveremail $2
 	fi
-fi
-
-if [ "$1" = "disable" ]; then
+elif [ "$1" = "disable" ]; then
 	git config zeitgit.enabled false
+else
+	echo "  Unrecognized Command"
+	exit 1
 fi
 
 echo "Zeitgit configuration:"
