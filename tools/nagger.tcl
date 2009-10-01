@@ -11,7 +11,7 @@ package require mime
 package require smtp
 package require xml
 
-set fh [open "|find /usr/home/nugget/nagtest -type d -name .git"] 
+set fh [open "|find / -type d -name .git"] 
 
 while {[gets $fh line] >= 0} {
 	set repo [regsub {\.git$} $line ""]
