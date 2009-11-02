@@ -108,6 +108,7 @@ while {[gets stdin line] >= 0} {
 				     $insertions,
 				     $deletions);"
 		do_sql $sql
+	}
 
 	#  tools/{zeitgit => zeitgit.in} |    0   (a rename)
 }
