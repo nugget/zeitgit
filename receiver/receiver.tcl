@@ -15,8 +15,8 @@ proc count_char {char buf} {
 proc do_sql {sql} {
 	global db
 
-	#puts "debug:\n$sql\n"
-	#return 0
+	# puts "debug:\n$sql\n"
+	# return 0
 
 	set res [pg_exec $db $sql]
 	set err [pg_result $res -error]
@@ -37,6 +37,7 @@ if {[catch {set db [pg_connect -connlist [array get DB]]} result] == 1} {
 }
 
 set in_body 0
+set dump 0
 
 set lh [open "/var/log/zeitgit.log" "w"]
 while {[gets stdin line] >= 0} {
@@ -54,6 +55,19 @@ while {[gets stdin line] >= 0} {
 		}
 	} elseif {[regexp { (.+) \| +(\d+) ([-+]+)} $line _ filename lines plusminus]} {
 		set in_body 0
+		set dump 1
+	} elseif {[regexp { (.+) \|  Bin} $line _ filename]} {
+		# webroot/images/moo.gif |  Bin 1125 -> 0 bytes
+		set in_body 0
+		set dump 1
+		set lines 0
+		set plusminus ""
+	} elseif {$in_body} {
+		append cdata(BODY) "$line\n"
+	}
+
+	if {$dump} {
+		set dump 0
 		if {![info exists stored($cdata(HASH))]} {
 			puts "Inserting $cdata(HASH)"
 
@@ -76,7 +90,7 @@ while {[gets stdin line] >= 0} {
 	                 WHERE [pg_quote $cdata(HASH)] NOT IN (SELECT DISTINCT hash FROM commits);"
 
 			do_sql $sql
-	
+
 			set sql "INSERT INTO commit_location (hash,branch,hostname,origin,path,version) VALUES ([pg_quote $cdata(HASH)], [pg_quote $cdata(BRANCH)],
                                      [pg_quote $cdata(HOSTNAME)], [pg_quote $cdata(ORIGIN)], [pg_quote $cdata(PATH)], [pg_quote $cdata(ZEITGIT)]);"
 
@@ -94,10 +108,6 @@ while {[gets stdin line] >= 0} {
 				     $insertions,
 				     $deletions);"
 		do_sql $sql
-
-	} elseif {$in_body} {
-		append cdata(BODY) "$line\n"
-	}
 
 	#  tools/{zeitgit => zeitgit.in} |    0   (a rename)
 }
