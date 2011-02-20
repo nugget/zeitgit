@@ -5,7 +5,7 @@ package require Pgtcl
 source [string map {receiver.tcl ""} [info script]]config.tcl
 
 proc epoch_ts {epoch} {
-	return "(SELECT TIMESTAMP WITH TIME ZONE 'epoch' + $epoch * INTERVAL '1 second')"
+	return [pg_quote [clock format $epoch -format "%Y-%m-%d %H:%M:%S" -gmt 1]]
 }
 
 proc count_char {char buf} {
