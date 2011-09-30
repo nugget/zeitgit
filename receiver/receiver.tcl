@@ -1,4 +1,4 @@
-#!/usr/bin/env tclsh8.4
+#!/usr/bin/env tclsh8.5
 
 package require Pgtcl
 
@@ -90,6 +90,8 @@ while {[gets stdin line] >= 0} {
 	                 WHERE [pg_quote $cdata(HASH)] NOT IN (SELECT DISTINCT hash FROM commits);"
 
 			do_sql $sql
+
+			puts "--\n$sql\n--\n"
 
 			set sql "INSERT INTO commit_location (hash,branch,hostname,origin,path,version) VALUES ([pg_quote $cdata(HASH)], [pg_quote $cdata(BRANCH)],
                                      [pg_quote $cdata(HOSTNAME)], [pg_quote $cdata(ORIGIN)], [pg_quote $cdata(PATH)], [pg_quote $cdata(ZEITGIT)]);"
