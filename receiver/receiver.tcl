@@ -2,6 +2,9 @@
 
 package require Pgtcl
 
+# Fail gracefully if the fogbugz api package isn't installed
+catch {package require fogbugz}
+
 source [string map {receiver.tcl ""} [info script]]config.tcl
 
 proc epoch_ts {epoch} {
@@ -30,6 +33,28 @@ proc do_sql {sql} {
 
 	return $retcode
 }
+
+proc fogbugz_log_commit {bugzid repo commit_hash} {
+	if {![info exists ::fogbugz::config(api_url)]} {
+		# tcl-fogbugz-api package is not configured
+		puts stderr "No Config"
+		return
+	}
+
+	lassign [::fogbugz::login] logged_in token
+	if {!$logged_in} {
+		puts stderr "Unable to log in to FogBugz: $token"
+		return
+	}
+
+	puts stderr "Trying newCheckin $bugzid $repo $commit_hash"
+	::fogbugz::raw_cmd newCheckin [dict create ixBug $bugzid sFile $repo sNew $commit_hash ixRepository 5]
+
+    ::fogbugz::logoff $token
+
+	return
+}
+
 
 if {[catch {set db [pg_connect -connlist [array get DB]]} result] == 1} {
 	puts "Unable to connect to database: $result"
@@ -110,6 +135,18 @@ while {[gets stdin line] >= 0} {
 				     $insertions,
 				     $deletions);"
 		do_sql $sql
+
+		unset -nocomplain bugzid
+		if {[regexp {BUGZID: ?(\d+)} $cdata(BODY) _ bidbuf]} {
+			set bugzid $bidbuf
+		} elseif {[regexp {BUGZID: ?(\d+)} $cdata(SUBJECT) _ bidbuf]} {
+			set bugzid $bidbuf
+		}
+		if {[info exists bugzid]} {
+			if {[regexp {git.flightaware.com/home/git/(.*)} $cdata(ORIGIN) _ repo]} {
+				fogbugz_log_commit $bugzid $repo $cdata(HASH)
+			}
+		}
 	}
 
 	#  tools/{zeitgit => zeitgit.in} |    0   (a rename)
