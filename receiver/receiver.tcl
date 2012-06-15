@@ -34,7 +34,25 @@ proc do_sql {sql} {
 	return $retcode
 }
 
-proc fogbugz_log_commit {bugzid repo commit_hash} {
+proc ::fogbugz::get_repo {origin} {
+	puts stderr "regexp on -${origin}-"
+	if {[regexp {git.flightaware.com/home/git/(.*)} $origin _ repo]} {
+		return [list 5 $repo]
+	}
+
+	if {[regexp {github.com:flightaware/(.*)\.git} $origin _ repo]} {
+		return [list 4 $repo]
+	}
+
+	if {[regexp {github.com:nugget/(.*)\.git} $origin _ repo]} {
+		return [list 6 $repo]
+	}
+
+	return [list 0 unknown]
+
+}
+
+proc fogbugz_log_commit {repoid bugzid repo commit_hash} {
 	if {![info exists ::fogbugz::config(api_url)]} {
 		# tcl-fogbugz-api package is not configured
 		puts stderr "No Config"
@@ -48,7 +66,7 @@ proc fogbugz_log_commit {bugzid repo commit_hash} {
 	}
 
 	puts stderr "Trying newCheckin $bugzid $repo $commit_hash"
-	::fogbugz::raw_cmd newCheckin [dict create ixBug $bugzid sFile $repo sNew $commit_hash ixRepository 5]
+	::fogbugz::raw_cmd newCheckin [dict create ixBug $bugzid sFile $repo sNew $commit_hash ixRepository $repoid]
 
     ::fogbugz::logoff $token
 
@@ -142,10 +160,11 @@ while {[gets stdin line] >= 0} {
 		} elseif {[regexp {BUGZID: ?(\d+)} $cdata(SUBJECT) _ bidbuf]} {
 			set bugzid $bidbuf
 		}
-		if {[info exists bugzid]} {
-			if {[regexp {git.flightaware.com/home/git/(.*)} $cdata(ORIGIN) _ repo]} {
-				fogbugz_log_commit $bugzid $repo $cdata(HASH)
-			}
+
+		lassign [::fogbugz::get_repo $cdata(ORIGIN)] repoid repo
+
+		if {$repoid > 0 && [info exists bugzid]} {
+			fogbugz_log_commit $repoid $bugzid $repo $cdata(HASH)
 		}
 	}
 
