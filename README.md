@@ -43,3 +43,11 @@ is available later.
 
 Zeitgit was developed internally at FlightAware to facilite a company-wide
 migration from CVS and Subversion to git.
+
+## Known Issues ##
+
+OS X 10.8 (Mountain Lion) broke unix mail sending.  You can fix this by 
+executing the following commands in a Terminal window:
+
+    sudo mkdir -p /Library/Server/Mail/Data/spool
+    sudo /usr/sbin/postfix set-permissions
