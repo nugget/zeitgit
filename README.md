@@ -24,7 +24,7 @@ of developers who use git for their coordinated version control:
 
 Any code which needs to run at the remote repository level should be as 
 boring and portable as possible.  Where practical, hooks and scripts are 
-written in basic bourne shell with minimal toolkit assumptions.
+written in basic Bourne shell with minimal toolkit assumptions.
 
 Zeitgit uses email as the transport mechanism so it doesn't require an 
 active net connection while commits are being logged.  Commit mails to
@@ -33,20 +33,20 @@ is available later.
 
 ## Requirements ##
 
-* Assumes you use Unix.  cygwin might be ok but is totally untested.
-* tcl and PostgreSQL required on the logging server
+* Assumes you use Unix.  cygwin might be OK but is totally untested.
+* Tcl and PostgreSQL required on the logging server
 * Procmail or some other mechanism to automatically pipe some emails
   into a script.
 * /bin/sh on the repository (client) side. 
 
 ## Credits ##
 
-Zeitgit was developed internally at FlightAware to facilite a company-wide
+Zeitgit was developed internally at FlightAware to facilitate a company-wide
 migration from CVS and Subversion to git.
 
 ## Known Issues ##
 
-OS X 10.8 (Mountain Lion) broke unix mail sending.  You can fix this by 
+OS X 10.8 (Mountain Lion) broke Unix mail sending.  You can fix this by 
 executing the following commands in a Terminal window:
 
     sudo mkdir -p /Library/Server/Mail/Data/spool
@@ -55,7 +55,7 @@ executing the following commands in a Terminal window:
 OS X 10.9 (Mavericks) settings to allow SASL-authenticated mail through
 your authorized SMTP relay:
 
-In /private/etc/posrtfix/main.cf add these lines:
+In /private/etc/postfix/main.cf add these lines:
 
     smtp_use_tls = yes
     smtp_tls_note_starttls_offer = yes
