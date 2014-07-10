@@ -51,3 +51,21 @@ executing the following commands in a Terminal window:
 
     sudo mkdir -p /Library/Server/Mail/Data/spool
     sudo /usr/sbin/postfix set-permissions
+
+OS X 10.9 (Mavericks) settings to allow SASL-authenticated mail through
+your authorized SMTP relay:
+
+In /private/etc/posrtfix/main.cf add these lines:
+
+    smtp_use_tls = yes
+    smtp_tls_note_starttls_offer = yes
+    relayhost = mail.example.com:587
+    smtp_sasl_security_options = noanonymous
+    smtp_sasl_auth_enable = yes
+    smtp_sasl_password_maps = hash:/private/etc/postfix/sasl_password
+
+In /private/etc/postfix/sasl_password:
+
+    mail.example.com:587 username:password
+
+Then run postmap sasl_password
