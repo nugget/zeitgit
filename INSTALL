@@ -12,7 +12,7 @@ should be a relatively straightforward process.
    schema.  You'll also want to set a custom password on the committer role:
 
         createdb zeitgit 
-	psql < db/schema.sql
+	psql zeitgit < db/schema.sql
 	psql zeitgit -c "ALTER ROLE committer WITH ENCRYPTED PASSWORD 'pwd';"
 
 2. Configure the receiver script to use your local database configuration:
