@@ -63,6 +63,8 @@ In /private/etc/postfix/main.cf add these lines:
     smtp_sasl_security_options = noanonymous
     smtp_sasl_auth_enable = yes
     smtp_sasl_password_maps = hash:/private/etc/postfix/sasl_password
+	# Optionally rewrite username@local. envelope senders
+	# myorigin = example.com
 
 In /private/etc/postfix/sasl_password:
 
