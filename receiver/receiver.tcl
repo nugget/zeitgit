@@ -48,6 +48,16 @@ proc ::fogbugz::get_repo {origin} {
 		return [list 6 $repo]
 	}
 
+	if {[regexp {github.flightaware.com:flightaware/(.*)\.git} $origin _ repo]} {
+		if {$repo ne "fa_web"} {
+			return [list 11 $repo]
+		}
+	}
+
+	if {[regexp {github.flightaware.com:ops/(.*)\.git} $origin _ repo]} {
+		return [list 12 $repo]
+	}
+
 	return [list 0 unknown]
 
 }
