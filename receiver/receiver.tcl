@@ -2,6 +2,9 @@
 
 package require Pgtcl
 
+# Fail gracefully if the fogbugz api package isn't installed
+catch {package require fogbugz}
+
 source [string map {receiver.tcl ""} [info script]]config.tcl
 
 proc epoch_ts {epoch} {
@@ -30,6 +33,74 @@ proc do_sql {sql} {
 
 	return $retcode
 }
+
+proc ::fogbugz::get_repo {origin} {
+	puts stderr "regexp on -${origin}-"
+	if {[regexp {git.flightaware.com/home/git/(.*)} $origin _ repo]} {
+		return [list 5 $repo]
+	}
+
+	if {[regexp {github.com:flightaware/(.*)\.git} $origin _ repo]} {
+		return [list 4 $repo]
+	}
+
+	if {[regexp {github.com:nugget/(.*)\.git} $origin _ repo]} {
+		return [list 6 $repo]
+	}
+
+	return [list 0 unknown]
+
+}
+
+proc fogbugz_log_commit {repoid bugzid repo commit_hash} {
+	if {![info exists ::fogbugz::config(api_url)]} {
+		# tcl-fogbugz-api package is not configured
+		puts stderr "No Config"
+		return
+	}
+
+	lassign [::fogbugz::login] logged_in token
+	if {!$logged_in} {
+		puts stderr "Unable to log in to FogBugz: $token"
+		return
+	}
+
+	puts stderr "Trying newCheckin $bugzid $repo $commit_hash"
+	::fogbugz::raw_cmd newCheckin [dict create ixBug $bugzid sFile $repo sNew $commit_hash ixRepository $repoid]
+
+    ::fogbugz::logoff $token
+
+	return
+}
+
+proc fogbugz_construct_sEvent {{_cdata cdata}} {
+	upvar 1 $_cdata cdata
+
+	set sEvent "Resolved by $cdata(AUTHORNAME) via git commit\n\n$cdata(SUBJECT)\n\n$cdata(BODY)"
+
+	return $sEvent
+}
+
+proc fogbugz_resolve_bug {bugzid message} {
+	if {![info exists ::fogbugz::config(api_url)]} {
+		# tcl-fogbugz-api package is not configured
+		puts stderr "No Config"
+		return
+	}
+
+	lassign [::fogbugz::login] logged_in token
+	if {!$logged_in} {
+		puts stderr "Unable to log in to FogBugz: $token"
+		return
+	}
+
+	::fogbugz::raw_cmd resolve [dict create ixBug $bugzid ixStatus sEvent $message]
+
+    ::fogbugz::logoff $token
+
+	return
+}
+
 
 if {[catch {set db [pg_connect -connlist [array get DB]]} result] == 1} {
 	puts "Unable to connect to database: $result"
@@ -91,6 +162,8 @@ while {[gets stdin line] >= 0} {
 
 			do_sql $sql
 
+			puts "--\n$sql\n--\n"
+
 			set sql "INSERT INTO commit_location (hash,branch,hostname,origin,path,version) VALUES ([pg_quote $cdata(HASH)], [pg_quote $cdata(BRANCH)],
                                      [pg_quote $cdata(HOSTNAME)], [pg_quote $cdata(ORIGIN)], [pg_quote $cdata(PATH)], [pg_quote $cdata(ZEITGIT)]);"
 
@@ -108,6 +181,39 @@ while {[gets stdin line] >= 0} {
 				     $insertions,
 				     $deletions);"
 		do_sql $sql
+
+		set parsebuf "$cdata(BODY)\n\n$cdata(SUBJECT)"
+		unset -nocomplain bugzid
+		if {[regexp {BUGZID: ?(\d+)} $parsebuf _ bidbuf]} {
+			set bugzid $bidbuf
+		}
+
+		lassign [::fogbugz::get_repo $cdata(ORIGIN)] repoid repo
+
+		if {$repoid > 0 && [info exists bugzid]} {
+			fogbugz_log_commit $repoid $bugzid $repo $cdata(HASH)
+		}
+
+		if {[info exists bugzid]} {
+			unset -nocomplain resolves
+			if {[regexp -nocase {(close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved) (#|BUGZID:) ?(\S+)} $parsebuf _ _ _ bidbuf} {
+				if {$bidbuf ne ""} {
+					set resolves $bidbuf
+				}
+			}
+			if {![info exists resolves]} {
+				if {[regexp -nocase {BUGZID: ?(\d+) (closed|fixed|resolved)} $parsebuf _ bidbuf} {
+					set resolves $bidbuf
+				}
+			}
+
+			if {[info exists resolves] && $resolves ne ""} {
+				set sEvent [fogbugz_construct_sEvent cdata]
+				puts stderr "I should resolve BUGZID:$resolves"
+				fogbugz_resolve_bug $resolves $sEvent
+			}
+		}
+
 	}
 
 	#  tools/{zeitgit => zeitgit.in} |    0   (a rename)
