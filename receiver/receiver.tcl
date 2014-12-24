@@ -81,7 +81,36 @@ proc fogbugz_construct_sEvent {{_cdata cdata}} {
 	return $sEvent
 }
 
-proc fogbugz_resolve_bug {bugzid message} {
+proc fogbugz_find_ixUser {{_cdata cdata}} {
+	upvar 1 $_cdata cdata
+
+	if {![info exists ::fogbugz::config(api_url)]} {
+		# tcl-fogbugz-api package is not configured
+		puts stderr "No Config"
+		return
+	}
+
+	lassign [::fogbugz::login] logged_in token
+
+	foreach person [::fogbugz::getList People [dict create token $token]] {
+		unset -nocomplain p
+		array set p $person
+
+		if {[regexp -nocase $cdata(AUTHORNAME) $p(sFullName)]} {
+			::fogbugz::logoff $token
+			return $p(ixPerson)
+		}
+		if {[regexp -nocase $cdata(AUTHOREMAIL) $p(sEmail)]} {
+			::fogbugz::logoff $token
+			return $p(ixPerson)
+		}
+	}
+
+    ::fogbugz::logoff $token
+	return ""
+}
+
+proc fogbugz_resolve_bug {bugzid message ixUser} {
 	if {![info exists ::fogbugz::config(api_url)]} {
 		# tcl-fogbugz-api package is not configured
 		puts stderr "No Config"
@@ -94,7 +123,17 @@ proc fogbugz_resolve_bug {bugzid message} {
 		return
 	}
 
-	::fogbugz::raw_cmd resolve [dict create ixBug $bugzid ixStatus sEvent $message]
+	unset -nocomplain payload
+	set payload(ixBug)		$bugzid
+	set payload(sEvent)		$message
+
+	if {$ixUser ne ""} {
+		set payload(ixPersonEditedBy) $ixUser
+	}
+
+	# puts "Resolving [array get payload]"
+
+	::fogbugz::raw_cmd resolve [array get payload]
 
     ::fogbugz::logoff $token
 
@@ -162,7 +201,7 @@ while {[gets stdin line] >= 0} {
 
 			do_sql $sql
 
-			puts "--\n$sql\n--\n"
+			# puts "--\n$sql\n--\n"
 
 			set sql "INSERT INTO commit_location (hash,branch,hostname,origin,path,version) VALUES ([pg_quote $cdata(HASH)], [pg_quote $cdata(BRANCH)],
                                      [pg_quote $cdata(HOSTNAME)], [pg_quote $cdata(ORIGIN)], [pg_quote $cdata(PATH)], [pg_quote $cdata(ZEITGIT)]);"
@@ -196,21 +235,23 @@ while {[gets stdin line] >= 0} {
 
 		if {[info exists bugzid]} {
 			unset -nocomplain resolves
-			if {[regexp -nocase {(close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved) (#|BUGZID:) ?(\S+)} $parsebuf _ _ _ bidbuf} {
+			if {[regexp -nocase {(close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved) (#|BUGZID:) ?(\S+)} $parsebuf _ _ _ bidbuf]} {
 				if {$bidbuf ne ""} {
 					set resolves $bidbuf
 				}
 			}
 			if {![info exists resolves]} {
-				if {[regexp -nocase {BUGZID: ?(\d+) (closed|fixed|resolved)} $parsebuf _ bidbuf} {
+				if {[regexp -nocase {BUGZID: ?(\d+) (closed|fixed|resolved)} $parsebuf _ bidbuf]} {
 					set resolves $bidbuf
 				}
 			}
 
 			if {[info exists resolves] && $resolves ne ""} {
 				set sEvent [fogbugz_construct_sEvent cdata]
+				set ixUser [fogbugz_find_ixUser cdata]
+
 				puts stderr "I should resolve BUGZID:$resolves"
-				fogbugz_resolve_bug $resolves $sEvent
+				fogbugz_resolve_bug $resolves $sEvent $ixUser
 			}
 		}
 
