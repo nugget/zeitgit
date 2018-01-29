@@ -171,7 +171,7 @@ while {[gets stdin line] >= 0} {
 		set cdata($key) "$value"
 		if {$key == "BODY"} {
 			set in_body 1
-			set cdata(BODY) "$value"
+			set cdata(BODY) "$value\n"
 		}
 	} elseif {[regexp { (.+) \| +(\d+) ([-+]+)} $line _ filename lines plusminus]} {
 		set in_body 0
