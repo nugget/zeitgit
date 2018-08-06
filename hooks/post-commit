@@ -37,6 +37,11 @@ while [ "$REPOPATH" = "" ] ; do
 done
 cd $REPOPATH
 
+# Ignore rebase merges
+if [ -d $REPOPATH/.git/rebase-merge ] ; then
+	exit
+fi
+
 FORMAT="ZEITGIT $VERSION%nHOSTNAME $HOSTNAME%nPATH $REPOPATH%nORIGIN $ORIGIN%nBRANCH $BRANCH%nHASH %H%nTREEHASH %T%nPARENTHASH %P%nAUTHORNAME %aN%nAUTHOREMAIL %ae%nAUTHORDATE %at%nCOMMITERNAME %cN%nCOMMITEREMAIL %ce%nCOMMITERDATE %ct%nSUBJECT %s%nBODY %b"
 
 echo "Sending commit data to zeitgit collector at $EMAIL"
